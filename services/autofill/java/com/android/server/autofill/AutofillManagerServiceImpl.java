@@ -419,16 +419,17 @@ final class AutofillManagerServiceImpl {
      * Asserts the component is owned by the caller.
      */
     private void assertCallerLocked(@NonNull ComponentName componentName) {
+        final String packageName = componentName.getPackageName();
         final PackageManager pm = mContext.getPackageManager();
         final int callingUid = Binder.getCallingUid();
         final int packageUid;
         try {
-            packageUid = pm.getPackageUidAsUser(componentName.getPackageName(),
-                    UserHandle.getCallingUserId());
+            packageUid = pm.getPackageUidAsUser(packageName, UserHandle.getCallingUserId());
         } catch (NameNotFoundException e) {
             throw new SecurityException("Could not verify UID for " + componentName);
         }
-        if (callingUid != packageUid) {
+        if (callingUid != packageUid && !LocalServices.getService(ActivityManagerInternal.class)
+                .hasRunningActivity(callingUid, packageName)) {
             final String[] packages = pm.getPackagesForUid(callingUid);
             final String callingPackage = packages != null ? packages[0] : "uid-" + callingUid;
             Slog.w(TAG, "App (package=" + callingPackage + ", UID=" + callingUid
