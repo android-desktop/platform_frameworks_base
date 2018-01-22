@@ -24,7 +24,6 @@ import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.annotation.SystemService;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -950,11 +949,8 @@ public final class AutofillManager {
         return mContext.getAutofillClient();
     }
 
-    private ComponentName getComponentNameFromContext() {
-        if (mContext instanceof Activity) {
-            return ((Activity) mContext).getComponentName();
-        }
-        return null;
+    private ComponentName getComponentNameFromContext(AutofillClient client) {
+        return client == null ? null : client.getComponentNameForAutofill();
     }
 
     /** @hide */
@@ -1007,7 +1003,8 @@ public final class AutofillManager {
             return;
         }
         try {
-            final ComponentName componentName = getComponentNameFromContext();
+            final AutofillClient client = getClientLocked();
+            final ComponentName componentName = getComponentNameFromContext(client);
             if (componentName == null) {
                 Log.w(TAG, "startSessionLocked(): context is not activity: " + mContext);
                 return;
@@ -1071,7 +1068,8 @@ public final class AutofillManager {
 
         try {
             if (restartIfNecessary) {
-                final ComponentName componentName = getComponentNameFromContext();
+                final AutofillClient client = getClientLocked();
+                final ComponentName componentName = getComponentNameFromContext(client);
                 if (componentName == null) {
                     Log.w(TAG, "startSessionLocked(): context is not activity: " + mContext);
                     return;
